@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+				"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="boardDao">
+
+	<resultMap type="BoardVO" id="boardMap">
+		<id	column="BRD_ID" property="boardId" />
+		<result	column="SBJ" property="subject" />
+		<result	column="CONT" property="content" />
+		<result	column="USR_ID" property="userId" />
+		<result	column="CRT_DT" property="createdDate" />		
+		<result	column="HIT" property="hit" />
+		<result	column="RCMD" property="recommend" />
+		<result column="DP_FL_NM" property="displayFileName"/>
+		<result column="RL_FL_NM" property="realFileName"/>
+		<association property="user" javaType="UserVO">
+			<id	column="U_USR_ID" property="userId"/>
+			<result	column="USR_NICK_NAME" property="userNickName" />
+			<result	column="U_CRT_DT" property="createdDate" />
+			<result	column="PNT" property="point" />
+		</association>	
+	</resultMap>
+	
+	<select id="getAllBoards"
+			resultMap="boardMap">
+		SELECT	/* [boardDao.xml][getAllBoards] */
+				B.BRD_ID
+				, B.SBJ
+				, B.USR_ID
+				, TO_CHAR(B.CRT_DT,'YYYY-MM-DD HH24:MI:SS') CRT_DT
+				, B.HIT
+				, B.RCMD
+				, U.USR_ID U_USR_ID
+				, U.USR_NICK_NAME
+				, U.CRT_DT U_CRT_DT
+				, U.PNT
+				, B.DP_FL_NM
+				, B.RL_FL_NM
+		FROM	BRD	 B
+				,USR U
+		WHERE	B.USR_ID = U.USR_ID
+		ORDER BY	B.BRD_ID DESC
+	</select>
+	
+	<insert id="addNewBoard"
+			parameterType="BoardVO">
+		INSERT INTO 
+					BRD 
+						(
+						   BRD_ID
+						   , SBJ
+						   , CONT
+						   , CRT_DT
+						   , USR_ID
+						   , HIT
+						   , RCMD
+						   , DP_FL_NM
+						   , RL_FL_NM
+						) 
+		VALUES 			( 
+							'BRD-'|| TO_CHAR(SYSDATE, 'YYYYMMDD') || '-' || LPAD(BRD_ID_SEQ.NEXTVAL,6,'0')
+							, #{subject}
+							, #{content}
+							, SYSDATE
+							, #{userId}
+							, 0
+							, 0
+							, #{displayFileName}
+							, #{realFileName}
+						)	
+	</insert>
+	
+	<delete id="deleteBoardById"
+			parameterType="string">
+		DELETE	/* [indexDao.xml][deleteBoardById] */
+		FROM	BRD
+		WHERE	BRD_ID = #{boardId}	
+	</delete>
+	
+	<select id="getBoardById"
+			resultMap="boardMap"
+			parameterType="string">
+		SELECT	/* [boardDao.xml][getBoardById] */
+				B.BRD_ID
+				, B.SBJ
+				, B.USR_ID
+				, U.USR_NICK_NAME
+				, B.CONT
+				, TO_CHAR(B.CRT_DT,'YYYY-MM-DD HH24:MI:SS') CRT_DT
+				, B.HIT
+				, B.RCMD
+				, B.DP_FL_NM
+				, B.RL_FL_NM
+		FROM	BRD B
+				, USR U
+		WHERE	BRD_ID = #{boardId}
+		AND		B.USR_ID = U.USR_ID
+	</select>
+	
+	<update id="updateHitCount"
+			parameterType="map">
+		UPDATE 	BRD
+		SET		HIT = HIT + 1
+		WHERE	BRD_ID = #{boardId}
+		AND		NOT EXISTS	(
+								SELECT	BRD_ID
+								FROM	HIT_BRD_USR
+								WHERE	USR_ID = #{userId}
+								AND		BRD_ID = #{boardId}
+							)
+	</update>
+	
+	<insert id="addReadHistory"
+			parameterType="map">
+		INSERT INTO 
+					HIT_BRD_USR 
+								(
+   									HIT_ID
+   									, USR_ID
+   									, BRD_ID
+   									, CRT_DT
+   								) 
+		VALUES 		( 
+						'HT-' || TO_CHAR(SYSDATE, 'YYYYMMDD') || '-' || LPAD(HIT_ID_SEQ.NEXTVAL, 6, '0')
+						, #{userId}
+						, #{boardId}
+						, SYSDATE
+					)
+	</insert>
+</mapper>

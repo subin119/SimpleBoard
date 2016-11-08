@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+
+<bean	id="boardService"
+		class="com.ktds.board.service.impl.BoardServiceImpl">
+	<property name="boardBiz" ref="boardBiz" />
+	<property name="userBiz" ref="userBiz" />
+</bean>
+
+<bean	id="boardBiz"
+		class="com.ktds.board.biz.impl.BoardBizImpl">
+	<property name="boardDao" ref="boardDao" />
+</bean>
+
+<bean	id="boardDao"
+		class="com.ktds.board.dao.impl.BoardDaoImpl">
+	<property name="sqlSessionTemplate" ref="sqlSessionTemplate" />
+</bean>
+
+</beans>
